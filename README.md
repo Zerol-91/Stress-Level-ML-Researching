@@ -19,8 +19,11 @@ This project focuses on developing machine learning models to predict anxiety le
 ## 🏗️ Project Structure
 Stress-Level-ML-Researching/
 ├── notebooks/
+
 │ ├── categorization_baseline.ipynb # Initial dataset exploration
+
 │ └── preprocessing.ipynb # Main modeling notebook
+
 ├── Stress_Predict_Data_Preprocessing.ipynb # Initial dataset exploration
 ├── Anxiety_Level_Baseline (2).ipynb # Main modeling notebook
 ├── Anxiety_Level_Test_2.csv # Google Forms responses
