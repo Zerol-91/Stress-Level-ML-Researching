@@ -1,0 +1,142 @@
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; }
+.wrap { padding: 16px 0; font-family: var(--font-sans); color: var(--color-text-primary); }
+.section { margin-bottom: 28px; }
+.section-title { font-size: 13px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--color-border-tertiary); }
+.cards { display: grid; gap: 10px; }
+.card { background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 14px; }
+.card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.tag { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+.tag-nb { background: var(--color-background-info); color: var(--color-text-info); }
+.tag-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
+.tag-ok { background: var(--color-background-success); color: var(--color-text-success); }
+.tag-red { background: var(--color-background-danger); color: var(--color-text-danger); }
+.card-label { font-size: 13px; font-weight: 500; }
+.card-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.55; }
+.metric-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.metric { font-size: 12px; background: var(--color-background-tertiary); border: 1px solid var(--color-border-tertiary); border-radius: 6px; padding: 4px 9px; color: var(--color-text-secondary); }
+.metric b { color: var(--color-text-primary); }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+.compare-table th { text-align: left; color: var(--color-text-secondary); font-weight: 500; padding: 4px 8px; border-bottom: 1px solid var(--color-border-tertiary); }
+.compare-table td { padding: 4px 8px; border-bottom: 1px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+.compare-table tr:last-child td { border-bottom: none; }
+.highlight { color: var(--color-text-primary); font-weight: 500; }
+.bad { color: var(--color-text-danger); font-weight: 500; }
+.good { color: var(--color-text-success); font-weight: 500; }
+.verdict { margin-top: 10px; padding: 8px 12px; border-left: 3px solid var(--color-border-warning); background: var(--color-background-warning); border-radius: 0 6px 6px 0; font-size: 12px; line-height: 1.5; color: var(--color-text-warning); }
+</style>
+<div class="wrap">
+
+<div class="section">
+  <div class="section-title">01b — EDA: данные</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-head"><span class="tag tag-nb">01b_data_eda</span><span class="card-label">Датасет</span></div>
+      <div class="card-body">433 респондента, 18 признаков. 16 фич для модели (Subjective_Anxiety исключена как утечка данных). Целевая переменная — Anxiety_Level (GAD-7, 0–21 баллов).</div>
+      <div class="metric-row">
+        <div class="metric">n = <b>433</b></div>
+        <div class="metric">features = <b>16</b></div>
+        <div class="metric">target range: <b>0–21</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-warn">⚠ проблема</span><span class="card-label">Распределение цели</span></div>
+      <div class="card-body">KDE Anxiety_Level не совпадает с нормальным — есть перекос в сторону средних значений. Именно это порождает плохую точность на высоких значениях (High Anxiety), которую зафиксировала рецензия.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">02 — Baseline модели (без SMOTE)</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-head"><span class="tag tag-nb">02_stress_prediction</span><span class="card-label">Итоговое сравнение моделей</span></div>
+      <table class="compare-table">
+        <tr><th>Модель</th><th>MAE</th><th>RMSE</th><th>R²</th></tr>
+        <tr><td class="highlight">CatBoost + Optuna ★</td><td class="good">2.793</td><td class="good">3.647</td><td class="good">0.386</td></tr>
+        <tr><td>RF + Optuna</td><td>2.870</td><td>3.714</td><td>0.363</td></tr>
+        <tr><td>Ridge (best α=10)</td><td>2.870</td><td>3.712</td><td>0.363</td></tr>
+        <tr><td>LightGBM + Optuna</td><td>2.870</td><td>3.703</td><td>0.366</td></tr>
+        <tr><td>LightGBM Bagging</td><td>2.871</td><td>3.683</td><td>0.374</td></tr>
+        <tr><td class="bad">LightGBM Log-Target+Bag</td><td class="bad">3.086</td><td class="bad">3.962</td><td class="bad">0.275</td></tr>
+        <tr><td class="bad">CatBoost Log-Target+Bag</td><td class="bad">3.075</td><td class="bad">3.951</td><td class="bad">0.279</td></tr>
+      </table>
+      <div class="verdict">LogTarget ухудшает метрики — он «сглаживает» высокие значения тревоги ещё сильнее. Это подтверждает рецензию: LogTarget не решает проблему дисбаланса, а усугубляет её.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-ok">техника</span><span class="card-label">Настройка гиперпараметров</span></div>
+      <div class="card-body">Применялся Optuna (TPE, 50 trials) + Gap Penalty (штраф за разрыв train/val MAE). Stratified K-Fold (5 splits) по квантилям цели. CatBoost с loss_function='MAE' — лучшая модель.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">02c — SMOGN (аналог SMOTE для регрессии)</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-head"><span class="tag tag-nb">02c_smote</span><span class="card-label">Что сделано</span></div>
+      <div class="card-body">Применён <b>SMOGN</b> — аналог SMOTE для задач регрессии. Синтетически досинтезированы примеры с высоким Anxiety_Level. Train выборка после ресемплинга: 299 (было 346 без SMOTE, т.к. часть исходных удаляется).</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-warn">⚠ результат</span><span class="card-label">SMOGN ухудшил метрики</span></div>
+      <table class="compare-table">
+        <tr><th>Модель</th><th>MAE</th><th>R²</th><th>vs baseline</th></tr>
+        <tr><td class="highlight">CatBoost + Optuna ★</td><td>2.927</td><td>0.341</td><td class="bad">+0.13 MAE ↑</td></tr>
+        <tr><td>LightGBM Log+Bag</td><td>3.120</td><td>0.246</td><td class="bad">хуже</td></tr>
+        <tr><td>RF GridSearch</td><td>3.191</td><td>0.152</td><td class="bad">хуже</td></tr>
+        <tr><td>Ridge</td><td>3.223</td><td>0.187</td><td class="bad">хуже</td></tr>
+      </table>
+      <div class="verdict">SMOGN не помог: глобальные метрики ухудшились по всем моделям. Причина — синтетические примеры «мусорные» при малой выборке (433 образца). Необходима сегментированная оценка MAE отдельно по группам Low/Mid/High Anxiety, чтобы понять, стало ли лучше именно на высоких значениях.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">03 — Анализ ошибок (лучшая модель)</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-head"><span class="tag tag-ok">✓ важный результат</span><span class="card-label">Остатки модели</span></div>
+      <div class="card-body">Среднее остатка: <b>+0.447</b> (небольшой систематический сдвиг — модель занижает). Std: 2.265. Skewness: −0.34. Kurtosis: −0.18 — близко к нормальному, хвосты не тяжёлые. Выбросов (ошибка > 4.48): <b>3 из 87 (3.4%)</b>.</div>
+      <div class="metric-row">
+        <div class="metric">MAE (train eval) = <b>1.921</b></div>
+        <div class="metric">RMSE = <b>2.309</b></div>
+        <div class="metric">outliers = <b>3 (3.4%)</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-ok">ключевой инсайт</span><span class="card-label">Валидация через Subjective_Anxiety</span></div>
+      <div class="card-body">GAD-7 ↔ Subjective_Anxiety: <b>r = 0.704</b>. Предсказание ↔ Subjective_Anxiety: <b>r = 0.620</b>. Это показывает, что модель улавливает реальный конструкт тревожности, а не просто шум.</div>
+      <div class="verdict">r=0.704 между объективной и субъективной оценкой — сильный аргумент в пользу валидности инструмента. Стоит включить в раздел «Обсуждение» или «Ограничения».</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-warn">⚠ outliers</span><span class="card-label">Три проблемных случая</span></div>
+      <div class="card-body">Actual=3, Pred≈9.3 (ошибка 6.3) — недооценённый «лёгкий» случай. Actual=21, Pred≈15.8 (ошибка 5.2) — классический пропуск тяжёлого случая. Actual=6, Pred≈10.9 — переоценка. Все три — это «нетипичные» респонденты, которых модель не умеет обрабатывать.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Ключевые выводы для проектирования работы</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-head"><span class="tag tag-red">📌 главное</span><span class="card-label">LogTarget вреден — убрать</span></div>
+      <div class="card-body">Log-transform таргета ухудшает MAE в обоих ноутбуках (02 и 02c). Это контраргумент исходной реализации — важно явно обосновать в работе отказ от LogTarget.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-red">📌 главное</span><span class="card-label">SMOGN не решает проблему дисбаланса</span></div>
+      <div class="card-body">Глобальные метрики ухудшились. Нужно добавить сегментированный MAE (Low/Mid/High) — тогда можно честно сравнить baseline и SMOGN и показать, улучшилось ли предсказание именно на High Anxiety.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-ok">📌 сильная сторона</span><span class="card-label">Валидация через субъективную оценку</span></div>
+      <div class="card-body">r=0.620 между предсказанием и субъективной тревогой — это внешняя валидность модели. Сильный аргумент для Обсуждения. Модель «видит» что-то реальное несмотря на R²=0.39.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag tag-ok">📌 техника</span><span class="card-label">CatBoost — лучшая архитектура</span></div>
+      <div class="card-body">CatBoost с MAE loss + Optuna стабильно лучший во всех экспериментах. Gap Penalty в CV — хорошая практика против переобучения, стоит описать в методах.</div>
+    </div>
+  </div>
+</div>
+
+</div>
