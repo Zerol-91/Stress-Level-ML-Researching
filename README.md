@@ -5,7 +5,7 @@
 
 Machine learning models that estimate a person's anxiety level on the **GAD-7 scale (0–21)** from behavioral and socio-demographic survey answers with *no clinical interview or physiological sensors* required.
 
-The final model (**CatBoost + Optuna**) reaches **MAE 2.79, R² 0.39** on a held-out test set, which is below the GAD-7 *minimal clinically important difference* (MCID, 3–4 points) — making the approach usable as an auxiliary screening/monitoring tool. Results are published in the [12th International Conference BIG DATA and Advanced Analytics (BSUIR, Minsk, 2026)]([https://libeldoc.bsuir.by/bitstream/123456789/63540/4/Lipnickaya_Modeli.pdf](https://libeldoc.bsuir.by/handle/123456789/63540?mode=full)).
+The final model (**CatBoost + Optuna**) reaches **MAE 2.79, R² 0.39** on a held-out test set, which is below the GAD-7 *minimal clinically important difference* (MCID, 3–4 points) — making the approach usable as an auxiliary screening/monitoring tool. Results are published in the [12th International Conference BIG DATA and Advanced Analytics (BSUIR, Minsk, 2026)](https://libeldoc.bsuir.by/handle/123456789/63540?mode=full).
 
 
 ## Key results
